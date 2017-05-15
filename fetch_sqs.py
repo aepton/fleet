@@ -54,6 +54,9 @@ def fetch_and_save_sqs_message():
     if found and job:
         pass
         # write job to /etc/current_job
+    else:
+        pass
+        # delete /etc/current_job
 
 if __name__ == '__main__':
     fetch_and_save_sqs_message()
