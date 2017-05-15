@@ -12,8 +12,13 @@ def fetch_and_save_sqs_message():
         aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
         aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
 
+    try:
+        with open(JOBFILE_PATH) as fh:
+            job = fh.read()
+    except Exception:
+        return
+
     found = False
-    job = None
     for queue in ['campfin', 'personal']:
         seen_messages = set()
         queue_url = '%s/%s.fifo' % (os.environ.get('AWS_SQS_QUEUE_PREFIX'), queue)
@@ -29,29 +34,16 @@ def fetch_and_save_sqs_message():
             seen_messages.add(response['Messages'][0]['MessageId'])
 
             payload = json.loads(response['Messages'][0]['Body'])
-            if payload['instance'] == os.environ.get('INSTANCE_ID'):
-                if payload['status'] != 'unclaimed':
-                    resubmit_message(
-                        sqs_client, queue_url, payload, response['Messages'][0]['ReceiptHandle'])
-
-                job = payload['job_name']
-                payload['status'] = 'in process'
-
-                found = True
-                sqs_client.send_message(
-                    QueueUrl=job['queue'],
-                    MessageGroupId=job['group_id'],
-                    MessageBody=json.dumps(job))
-                break
-            else:
+            if payload['instance'] != os.environ.get('INSTANCE_ID') or payload['job_name'] != job:
                 resubmit_message(
                     sqs_client, queue_url, payload, response['Messages'][0]['ReceiptHandle'])
+            else:
+                found = True
+                sqs_client.delete_message(QueueUrl=queue_url, ReceiptHandle=receipt_handle)
+                break
 
     if found and job:
-        with open(JOBFILE_PATH, 'w+') as fh:
-            fh.write(job)
-    else:
         os.remove(JOBFILE_PATH)
 
 if __name__ == '__main__':
-    fetch_and_save_sqs_message()
+    delete_current_job()
