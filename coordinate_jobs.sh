@@ -12,6 +12,8 @@ elif [ "$job" == "WA ETL" ]; then
 elif [ "$job" == "WA dedupe" ]; then
   /home/ubuntu/code/campfin/scripts/run_dedupe.sh
 elif [ "$job" == "" ]; then
+  # Sleep 2 minutes to allow debugging
+  sleep 2m
   aws ec2 stop-instances --instance-ids=$instance
 fi
 
