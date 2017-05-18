@@ -22,7 +22,7 @@ def fetch_and_save_sqs_message():
         while not found:
             response = sqs_client.receive_message(QueueUrl=queue_url, MaxNumberOfMessages=1)
 
-            if not response or not response['Messages']:
+            if not response or not 'Messages' in response:
                 break
             if response['Messages'][0]['MessageId'] in seen_messages:
                 break
