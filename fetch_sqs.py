@@ -1,6 +1,7 @@
 import boto3
 import json
 import os
+import uuid
 
 from sqs_utils import resubmit_message
 
@@ -41,7 +42,8 @@ def fetch_and_save_sqs_message():
                 sqs_client.send_message(
                     QueueUrl=job['queue'],
                     MessageGroupId=job['group_id'],
-                    MessageBody=json.dumps(job))
+                    MessageBody=json.dumps(job),
+                    MessageDeduplicationId=str(uuid.uuid4()))
                 break
             else:
                 resubmit_message(
