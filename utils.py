@@ -104,9 +104,12 @@ def publish_job_dashboard():
   write_to_s3('jobs.json', contents=json.dumps({'jobs': jobs}), content_type='application/json')
 
 def fetch_and_save_dynamodb_job():
-  job = get_most_recent_jobs(1, {'status': 'in process'})[0]
-  job['status'] = 'in process'
-  store_job_status_in_dynamodb(job)
+  try:
+    job = get_most_recent_jobs(1, {'status': 'pending'})[0]
+    job['status'] = 'in process'
+    store_job_status_in_dynamodb(job)
+  except Exception:
+    pass
 
   if job:
     with open(JOBFILE_PATH, 'w+') as fh:
