@@ -10,12 +10,12 @@ get_current_instance() {
 get_current_job() {
   touch $jobfile_path
   job_data=$(<$jobfile_path)
-  IFS=';' read -ra job_info <<< "$job_data"; unset IFS;
+  IFS=',' read -ra job_info <<< "$job_data"; unset IFS;
   job=${job_info[0]}
   echo "Starting with $job"
   /home/ubuntu/code/fleet/fetch_job.sh
   job_data=$(<$jobfile_path)
-  IFS=';' read -ra job_info <<< "$job_data"; unset IFS;
+  IFS=',' read -ra job_info <<< "$job_data"; unset IFS;
   job=${job_info[0]}
   echo "Got job $job"
 }
