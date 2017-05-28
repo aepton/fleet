@@ -2,11 +2,16 @@
 
 get_current_instance() {
   instance=$(ec2metadata --instance-id | cut -d " " -f 2)
+  echo "Got instance $instance"
 }
 
 get_current_job() {
+  touch /etc/current_job
+  job=$(</etc/current_job)
+  echo "Starting with $job"
   /home/ubuntu/code/fleet/fetch_job.sh
   job=$(</etc/current_job)
+  echo "Got job $job"
 }
 
 shutdown_instance() {
@@ -21,6 +26,7 @@ update_repos() {
   for i in "${repos[@]}"
   do
     cd $i
+    echo "Updating $i"
     git pull origin master
   done
 }
@@ -34,11 +40,12 @@ while [ -n "$job" ]
 do
 
   case "$job" in
-    "degree days" ) /home/ubuntu/code/degree_days/runner.sh ;;
-    "WA ETL"      ) /home/ubuntu/code/campfin/scripts/rebuild_prod.sh ;;
-    "WA dedupe"   ) /home/ubuntu/code/campfin/scripts/run_dedupe.sh ;;
+    "degree days" ) echo "Launching degree days"; /home/ubuntu/code/degree_days/runner.sh ;;
+    "WA ETL"      ) echo "Launching WA ETL"; /home/ubuntu/code/campfin/scripts/rebuild_prod.sh ;;
+    "WA dedupe"   ) echo "Launching WA dedupe"; /home/ubuntu/code/campfin/scripts/run_dedupe.sh ;;
   esac
 
+  echo "Deleting job"
   /home/ubuntu/code/fleet/delete_job.sh
 
   get_current_job

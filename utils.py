@@ -82,14 +82,14 @@ def job_matches_settings(job, settings):
 
 def get_most_recent_jobs(num_jobs=10, settings=None):
   table = get_dynamodb_table('status-job')
-  table = set_dynamodb_throughput(table, 'ReadCapacityUnits', num_jobs)
+  #table = set_dynamodb_throughput(table, 'ReadCapacityUnits', num_jobs)
 
   results = table.scan()['Items']
   if settings:
     results = [job for job in results if job_matches_settings(job, settings)]
   results = sorted(results)[:num_jobs]
 
-  set_dynamodb_throughput(table, 'ReadCapacityUnits', 1)
+  #set_dynamodb_throughput(table, 'ReadCapacityUnits', 1)
 
   return results
 
