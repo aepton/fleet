@@ -1,16 +1,18 @@
 #!/bin/bash
 
+jobfile_path="/tmp/current_job"
+
 get_current_instance() {
   instance=$(ec2metadata --instance-id | cut -d " " -f 2)
   echo "Got instance $instance"
 }
 
 get_current_job() {
-  touch /etc/current_job
-  job=$(</etc/current_job)
+  touch $jobfile_path
+  job=$(<$jobfile_path)
   echo "Starting with $job"
   /home/ubuntu/code/fleet/fetch_job.sh
-  job=$(</etc/current_job)
+  job=$(<$jobfile_path)
   echo "Got job $job"
 }
 
