@@ -108,13 +108,13 @@ def fetch_and_save_dynamodb_job():
     job = get_most_recent_jobs(1, {'status': 'pending'})[0]
     job['status'] = 'in process'
     store_job_status_in_dynamodb(job)
-  except Exception:
+  except:
     pass
 
-  if job:
+  try:
     with open(JOBFILE_PATH, 'w+') as fh:
       fh.write(','.join([job['jobName'], job['jobId']]))
-  else:
+  except:
       os.remove(JOBFILE_PATH)
 
   publish_job_dashboard()
