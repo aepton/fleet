@@ -1,20 +1,27 @@
 import boto3
 import calendar
+import json
 import os
 import time
 import uuid
 
+from StringIO import StringIO
+
 JOBFILE_PATH = '/tmp/current_job'
 S3_BUCKET = 'status.epton.org'
 
-def write_to_s3(s3_path, local_path=None, contents=None, bucket=S3_BUCKET):
+def write_to_s3(
+    s3_path, local_path=None, contents=None, bucket=S3_BUCKET, content_type='text/html'):
   session = boto3.Session(profile_name='abe')
   s3 = session.resource('s3')
   if local_path:
     source = open(local_path, 'rb')
   else:
     source = StringIO(contents)
-  s3.Object(bucket, s3_path).put(Body=source)
+
+  key = s3.Object(bucket, s3_path)
+  key.put(Body=source, ContentType=content_type)
+  key.Acl().put(ACL='public-read')
 
 def load_from_s3_base(s3_path, bucket, encoding):
   session = boto3.Session(profile_name='abe')
@@ -86,6 +93,16 @@ def get_most_recent_jobs(num_jobs=10, settings=None):
 
   return results
 
+def publish_job_dashboard():
+  jobs = []
+  for job in get_most_recent_jobs(20):
+    job['created'] = float(job['created'])
+    if 'completed' in job:
+      job['completed'] = float(job['completed'])
+    jobs.append(job)
+
+  write_to_s3('jobs.json', contents=json.dumps({'jobs': jobs}), content_type='application/json')
+
 def fetch_and_save_dynamodb_job():
   job = get_most_recent_jobs(1, {'status': 'pending'})[0]
   job['status'] = 'in process'
@@ -97,6 +114,8 @@ def fetch_and_save_dynamodb_job():
   else:
       os.remove(JOBFILE_PATH)
 
+  publish_job_dashboard()
+
 def finish_dynamodb_job():
   with open(JOBFILE_PATH) as fh:
     (job_name, job_id) = fh.read().split(',')
@@ -107,6 +126,8 @@ def finish_dynamodb_job():
     store_job_status_in_dynamodb(job)
 
     os.remove(JOBFILE_PATH)
+
+  publish_job_dashboard()
 
 if __name__ == '__main__':
   jobs = get_most_recent_jobs(1)
