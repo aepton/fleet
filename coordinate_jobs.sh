@@ -24,7 +24,7 @@ shutdown_instance() {
   # Sleep 2 minutes to allow debugging
   echo "Sleeping"
   sleep 2m
-  # aws ec2 stop-instances --instance-ids=$instance
+  aws ec2 stop-instances --instance-ids=$instance
 }
 
 update_repos() {
