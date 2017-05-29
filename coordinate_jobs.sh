@@ -8,16 +8,20 @@ get_current_instance() {
 }
 
 get_current_job() {
+  read_job
+  echo "Initial job: $job"
+
+  /home/ubuntu/code/fleet/fetch_job.sh
+
+  read_job
+  echo "New current job: $job"
+}
+
+read_job() {
   touch $jobfile_path
   job_data=$(<$jobfile_path)
   IFS=',' read -ra job_info <<< "$job_data"; unset IFS;
   job=${job_info[0]}
-  echo "Starting with $job"
-  /home/ubuntu/code/fleet/fetch_job.sh
-  job_data=$(<$jobfile_path)
-  IFS=',' read -ra job_info <<< "$job_data"; unset IFS;
-  job=${job_info[0]}
-  echo "Got job $job"
 }
 
 shutdown_instance() {
