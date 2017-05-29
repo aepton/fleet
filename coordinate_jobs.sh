@@ -29,6 +29,7 @@ shutdown_instance() {
   echo "Sleeping"
   sleep 2m
   echo "Shutting down"
+  sleep 10s
   aws ec2 stop-instances --instance-ids=$instance
 }
 
